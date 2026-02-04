@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "FullScreenExperienceShell (Package)": {
+      "commandName": "MsixPackage",
+      "nativeDebugging": false
+    },
+    "FullScreenExperienceShell (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
