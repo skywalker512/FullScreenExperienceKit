@@ -22,24 +22,7 @@ internal sealed class WidgetHelpers
     public const string WidgetsPlatformRuntimePackageId = "9N3RK8ZV2ZR8";
     public const string WidgetsPlatformRuntimePackageFamilyName = "Microsoft.WidgetsPlatformRuntime_8wekyb3d8bbwe";
 
-    public static readonly string[] DefaultWidgetDefinitionIds =
-    {
-    #if CANARY_BUILD
-        "Microsoft.Windows.DevHome.Canary_8wekyb3d8bbwe!App!!CoreWidgetProvider!!System_CPUUsage",
-        "Microsoft.Windows.DevHome.Canary_8wekyb3d8bbwe!App!!CoreWidgetProvider!!System_GPUUsage",
-        "Microsoft.Windows.DevHome.Canary_8wekyb3d8bbwe!App!!CoreWidgetProvider!!System_NetworkUsage",
-    #elif STABLE_BUILD
-        "Microsoft.Windows.DevHome_8wekyb3d8bbwe!App!!CoreWidgetProvider!!System_CPUUsage",
-        "Microsoft.Windows.DevHome_8wekyb3d8bbwe!App!!CoreWidgetProvider!!System_GPUUsage",
-        "Microsoft.Windows.DevHome_8wekyb3d8bbwe!App!!CoreWidgetProvider!!System_NetworkUsage",
-    #else
-        "Microsoft.Windows.DevHome.Dev_8wekyb3d8bbwe!App!!CoreWidgetProvider!!System_CPUUsage",
-        "Microsoft.Windows.DevHome.Dev_8wekyb3d8bbwe!App!!CoreWidgetProvider!!System_GPUUsage",
-        "Microsoft.Windows.DevHome.Dev_8wekyb3d8bbwe!App!!CoreWidgetProvider!!System_NetworkUsage",
-    #endif
-    };
-
-    public const string DevHomeHostName = "DevHome";
+    public const string WidgetHostName = "FullScreenExperienceWidgets";
 
     public const double WidgetPxHeightSmall = 146;
     public const double WidgetPxHeightMedium = 304;
@@ -96,7 +79,7 @@ internal sealed class WidgetHelpers
     {
         var state = new WidgetCustomState
         {
-            Host = DevHomeHostName,
+            Host = WidgetHostName,
             Position = ordinal,
         };
 

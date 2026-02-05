@@ -31,7 +31,7 @@ public class WidgetHostingService : IWidgetHostingService
         {
             try
             {
-                _widgetHost ??= await Task.Run(() => WidgetHost.Register(new WidgetHostContext("BAA93438-9B07-4554-AD09-7ACCD7D4F031")));
+                _widgetHost ??= await Task.Run(() => WidgetHost.Register(new WidgetHostContext("D4732504-BFFA-4CC1-AD05-04074910C683")));
                 return await Task.Run(() => _widgetHost.GetWidgets()) ?? [];
             }
             catch (COMException ex) when (ex.HResult == RpcServerUnavailable || ex.HResult == RpcCallFailed)
@@ -60,7 +60,7 @@ public class WidgetHostingService : IWidgetHostingService
         {
             try
             {
-                _widgetHost ??= await Task.Run(() => WidgetHost.Register(new WidgetHostContext("BAA93438-9B07-4554-AD09-7ACCD7D4F031")));
+                _widgetHost ??= await Task.Run(() => WidgetHost.Register(new WidgetHostContext("D4732504-BFFA-4CC1-AD05-04074910C683")));
                 return await Task.Run(() => _widgetHost.GetWidget(widgetId));
             }
             catch (COMException ex) when (ex.HResult == RpcServerUnavailable || ex.HResult == RpcCallFailed)
@@ -87,7 +87,7 @@ public class WidgetHostingService : IWidgetHostingService
         {
             try
             {
-                _widgetHost ??= await Task.Run(() => WidgetHost.Register(new WidgetHostContext("BAA93438-9B07-4554-AD09-7ACCD7D4F031")));
+                _widgetHost ??= await Task.Run(() => WidgetHost.Register(new WidgetHostContext("D4732504-BFFA-4CC1-AD05-04074910C683")));
                 return await Task.Run(async () => await _widgetHost.CreateWidgetAsync(widgetDefinitionId, widgetSize));
             }
             catch (COMException ex) when (ex.HResult == RpcServerUnavailable || ex.HResult == RpcCallFailed)

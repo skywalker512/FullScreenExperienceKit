@@ -47,6 +47,8 @@ namespace FullScreenExperienceShell
     {
         private Window? _window;
 
+        private DispatcherQueue _dispatcherQueue;        
+
         public IHost Host
         {
             get;
@@ -65,6 +67,8 @@ namespace FullScreenExperienceShell
         public App()
         {
             InitializeComponent();
+
+            _dispatcherQueue = DispatcherQueue.GetForCurrentThread()!;
 
             Host = Microsoft.Extensions.Hosting.Host.
                 CreateDefaultBuilder().
@@ -90,13 +94,13 @@ namespace FullScreenExperienceShell
                     // Core Services
                     services.AddSingleton<IFileService, FileService>();
 
-                    //// Main window: Allow access to the main window
-                    //// from anywhere in the application.
-                    //services.AddSingleton(_ => MainWindow);
+                    // Main window: Allow access to the main window
+                    // from anywhere in the application.
+                    services.AddSingleton(_ => _window!);
 
-                    //// DispatcherQueue: Allow access to the DispatcherQueue for
-                    //// the main window for general purpose UI thread access.
-                    services.AddSingleton(_ => DispatcherQueue.GetForCurrentThread());
+                    // DispatcherQueue: Allow access to the DispatcherQueue for
+                    // the main window for general purpose UI thread access.
+                    services.AddSingleton(_ => _dispatcherQueue);
 
                     // Dashboard
                     services.AddDashboard(context);

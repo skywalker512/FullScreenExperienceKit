@@ -8,6 +8,7 @@ using DevHome.Contracts.Services;
 using DevHome.Dashboard.ComSafeWidgetObjects;
 using DevHome.Dashboard.Services;
 using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Imaging;
 
 namespace DevHome.Dashboard.ViewModels;
 
@@ -23,7 +24,7 @@ public partial class AddWidgetViewModel : ObservableObject
     private string _widgetProviderDisplayTitle;
 
     [ObservableProperty]
-    private Brush _widgetScreenshot;
+    private BitmapImage _widgetScreenshot;
 
     [ObservableProperty]
     private bool _pinButtonVisibility;
@@ -44,7 +45,7 @@ public partial class AddWidgetViewModel : ObservableObject
 
         WidgetDisplayTitle = selectedWidgetDefinition.DisplayTitle;
         WidgetProviderDisplayTitle = selectedWidgetDefinition.ProviderDefinitionDisplayName;
-        WidgetScreenshot = await _widgetScreenshotService.GetBrushForWidgetScreenshotAsync(selectedWidgetDefinition, _themeSelectorService.GetActualTheme());
+        WidgetScreenshot = await _widgetScreenshotService.GetWidgetScreenshotAsync(selectedWidgetDefinition, _themeSelectorService.GetActualTheme());
         PinButtonVisibility = true;
     }
 
@@ -64,7 +65,7 @@ public partial class AddWidgetViewModel : ObservableObject
         {
             // Update the preview image for the selected widget.
             var theme = _themeSelectorService.GetActualTheme();
-            WidgetScreenshot = await _widgetScreenshotService.GetBrushForWidgetScreenshotAsync(_selectedWidgetDefinition, theme);
+            WidgetScreenshot = await _widgetScreenshotService.GetWidgetScreenshotAsync(_selectedWidgetDefinition, theme);
         }
     }
 }

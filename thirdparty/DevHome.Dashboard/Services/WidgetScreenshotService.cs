@@ -75,7 +75,7 @@ public class WidgetScreenshotService : IWidgetScreenshotService
         return bitmapImage;
     }
 
-    public async Task<Brush> GetBrushForWidgetScreenshotAsync(ComSafeWidgetDefinition widgetDefinition, ElementTheme theme)
+    public async Task<BitmapImage> GetWidgetScreenshotAsync(ComSafeWidgetDefinition widgetDefinition, ElementTheme theme)
     {
         var image = new BitmapImage();
         try
@@ -91,12 +91,7 @@ public class WidgetScreenshotService : IWidgetScreenshotService
             _log.Error(ex, $"Failed to get widget screenshot for widget definition {widgetDefinition.DisplayTitle}");
         }
 
-        var brush = new ImageBrush
-        {
-            ImageSource = image,
-        };
-
-        return brush;
+        return image;
     }
 
     private async Task<BitmapImage> WidgetScreenshotToBitmapImageAsync(IRandomAccessStreamReference iconStreamRef)

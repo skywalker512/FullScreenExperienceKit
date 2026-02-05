@@ -121,18 +121,6 @@
     <value>Add widget</value>
     <comment>Label for "Add widget" button</comment>
   </data>
-  <data name="DashboardBanner.Title" xml:space="preserve">
-    <value>Monitor your projects using widgets</value>
-    <comment>Title text of an instruction banner on the widget dashboard</comment>
-  </data>
-  <data name="DashboardBanner.Description" xml:space="preserve">
-    <value>Check out widgets that can help you connect to your developer account and manage your projects.</value>
-    <comment>Description text of an instruction banner on the widget dashboard</comment>
-  </data>
-  <data name="DashboardBanner.ButtonText" xml:space="preserve">
-    <value>Learn more</value>
-    <comment>Button text for learning more about setting up the widget dashboard</comment>
-  </data>
   <data name="NavigationPane.Content" xml:space="preserve">
     <value>Dashboard</value>
     <comment>Navigation pane content</comment>
@@ -245,10 +233,6 @@
     <value>Get in Store app</value>
     <comment>Button text to go to store listing</comment>
   </data>
-  <data name="DashboardBanner.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>Dashboard Banner</value>
-    <comment>Name of the dashboard banner for automation</comment>
-  </data>
   <data name="CustomizeWidgetTitle.Text" xml:space="preserve">
     <value>Customize widget</value>
     <comment>Title for "Customize" dialog</comment>
@@ -258,7 +242,7 @@
     <comment>State of selected size for automation purposes</comment>
   </data>
   <data name="CouldNotCreateWidgetError" xml:space="preserve">
-    <value>Dev Home encountered an error. The widget could not be created.</value>
+    <value>Widget Host encountered an error. The widget could not be created.</value>
     <comment>Error that pops up in a message dialog when the user tries to pin a widget but the widget could not be created.</comment>
   </data>
   <data name="CloseButtonText" xml:space="preserve">

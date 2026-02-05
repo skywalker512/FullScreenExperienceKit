@@ -14,7 +14,6 @@ public static class ServiceExtensions
     {
         // View-models
         services.AddSingleton<DashboardViewModel>();
-        services.AddTransient<DashboardBannerViewModel>();
         services.AddTransient<AddWidgetViewModel>();
 
         // DI factory pattern for creating instances with certain parameters

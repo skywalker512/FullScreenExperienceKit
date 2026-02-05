@@ -39,8 +39,6 @@ public partial class DashboardView : ToolPage, IDisposable
 
     public DashboardViewModel ViewModel { get; }
 
-    internal DashboardBannerViewModel BannerViewModel { get; }
-
     private readonly WidgetViewModelFactory _widgetViewModelFactory;
 
     private readonly SemaphoreSlim _pinnedWidgetsLock = new(1, 1);
@@ -57,7 +55,6 @@ public partial class DashboardView : ToolPage, IDisposable
     public DashboardView()
     {
         ViewModel = Application.Current.GetService<DashboardViewModel>();
-        BannerViewModel = Application.Current.GetService<DashboardBannerViewModel>();
         _widgetViewModelFactory = Application.Current.GetService<WidgetViewModelFactory>();
 
         this.InitializeComponent();
@@ -66,10 +63,6 @@ public partial class DashboardView : ToolPage, IDisposable
 
         _dispatcherQueue = Application.Current.GetService<DispatcherQueue>();
         _localSettingsService = Application.Current.GetService<ILocalSettingsService>();
-
-#if DEBUG
-        Loaded += AddResetButton;
-#endif
     }
 
     private async Task<bool> SubscribeToWidgetCatalogEventsAsync()
@@ -255,46 +248,16 @@ public partial class DashboardView : ToolPage, IDisposable
     private async Task InitializePinnedWidgetListAsync(bool isFirstDashboardRun, CancellationToken cancellationToken)
     {
         var hostWidgets = await GetPreviouslyPinnedWidgets();
-        if ((hostWidgets.Length == 0) && isFirstDashboardRun)
+        await _pinnedWidgetsLock.WaitAsync(CancellationToken.None);
+        try
         {
-            // If it's the first time the Dashboard has been displayed and we have no other widgets pinned to a
-            // different version of Dev Home, pin some default widgets.
-            _log.Information($"Pin default widgets");
-            await _pinnedWidgetsLock.WaitAsync(CancellationToken.None);
-            try
-            {
-                await PinDefaultWidgetsAsync(cancellationToken);
-            }
-            catch (OperationCanceledException ex)
-            {
-                // If the operation is cancelled, delete any default widgets that were already pinned and reset the IsNotFirstDashboardRun setting.
-                // Next time the user opens the Dashboard, treat it as the first run again.
-                _log.Information(ex, "PinDefaultWidgetsAsync operation was cancelled, delete any widgets already pinned");
-                foreach (var widget in ViewModel.PinnedWidgets)
-                {
-                    await widget.Widget.DeleteAsync();
-                }
-
-                await _localSettingsService.SaveSettingAsync(WellKnownSettingsKeys.IsNotFirstDashboardRun, false);
-            }
-            finally
-            {
-                _pinnedWidgetsLock.Release();
-            }
+            await RestorePinnedWidgetsAsync(hostWidgets, cancellationToken);
         }
-        else
+        finally
         {
-            await _pinnedWidgetsLock.WaitAsync(CancellationToken.None);
-            try
-            {
-                await RestorePinnedWidgetsAsync(hostWidgets, cancellationToken);
-            }
-            finally
-            {
-                // No cleanup to do if the operation is cancelled.
-                _pinnedWidgetsLock.Release();
-            }
-        }
+            // No cleanup to do if the operation is cancelled.
+            _pinnedWidgetsLock.Release();
+        }        
     }
 
     private async Task<ComSafeWidget[]> GetPreviouslyPinnedWidgets()
@@ -357,7 +320,7 @@ public partial class DashboardView : ToolPage, IDisposable
                 }
 
                 var stateObj = System.Text.Json.JsonSerializer.Deserialize(stateStr, SourceGenerationContext.Default.WidgetCustomState);
-                if (stateObj.Host != WidgetHelpers.DevHomeHostName)
+                if (stateObj.Host != WidgetHelpers.WidgetHostName)
                 {
                     // This shouldn't be able to be reached
                     _log.Error($"Widget has custom state but no HostName.");
@@ -466,79 +429,6 @@ public partial class DashboardView : ToolPage, IDisposable
         var newWidgetList = await ViewModel.WidgetHostingService.GetWidgetsAsync();
         length = newWidgetList.Length;
         _log.Information($"After delete, {length} widgets for this host");
-    }
-
-    private async Task PinDefaultWidgetsAsync(CancellationToken cancellationToken)
-    {
-        var comSafeWidgetDefinitions = await ComSafeHelpers.GetAllOrderedComSafeWidgetDefinitions(ViewModel.WidgetHostingService);
-        foreach (var comSafeWidgetDefinition in comSafeWidgetDefinitions)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            var id = comSafeWidgetDefinition.Id;
-            if (WidgetHelpers.DefaultWidgetDefinitionIds.Contains(id))
-            {
-                _log.Information($"Found default widget {id}");
-                await PinDefaultWidgetAsync(comSafeWidgetDefinition, cancellationToken);
-            }
-        }
-    }
-
-    private async Task PinDefaultWidgetAsync(ComSafeWidgetDefinition defaultWidgetDefinition, CancellationToken cancellationToken)
-    {
-        try
-        {
-            // Create widget
-            var size = WidgetHelpers.GetDefaultWidgetSize(await defaultWidgetDefinition.GetWidgetCapabilitiesAsync());
-            var definitionId = defaultWidgetDefinition.Id;
-            var unsafeWidget = await ViewModel.WidgetHostingService.CreateWidgetAsync(definitionId, size);
-            if (unsafeWidget == null)
-            {
-                // Fail silently, since this is only the default widget and not a response to user action.
-                return;
-            }
-
-            var unsafeWidgetId = await ComSafeWidget.GetIdFromUnsafeWidgetAsync(unsafeWidget);
-            if (unsafeWidgetId == string.Empty)
-            {
-                // If we created the widget but can't get a ComSafeWidget and show it, delete the widget.
-                // We can fail silently since this isn't in response to user action.
-                _log.Error("Couldn't get Widget.Id, can't create the widget");
-                await unsafeWidget.DeleteAsync();
-                return;
-            }
-
-            var comSafeWidget = new ComSafeWidget(unsafeWidgetId);
-            if (!await comSafeWidget.PopulateAsync())
-            {
-                // If we created the widget but can't populate the ComSafeWidget, delete the widget.
-                // We can fail silently since this isn't in response to user action.
-                _log.Error("Couldn't populate ComSafeWidget, can't create the widget");
-                await unsafeWidget.DeleteAsync();
-                return;
-            }
-
-            _log.Information($"Created default widget {unsafeWidgetId}");
-
-            // Set custom state on new widget.
-            var position = ViewModel.PinnedWidgets.Count;
-            var newCustomState = WidgetHelpers.CreateWidgetCustomState(position);
-            _log.Debug($"SetCustomState: {newCustomState}");
-            await comSafeWidget.SetCustomStateAsync(newCustomState);
-
-            // Put new widget on the Dashboard.
-            await InsertWidgetInPinnedWidgetsAsync(comSafeWidget, size, position, cancellationToken);
-            _log.Information($"Inserted default widget {unsafeWidgetId} at position {position}");
-        }
-        catch (OperationCanceledException)
-        {
-            throw;
-        }
-        catch (Exception ex)
-        {
-            // We can fail silently since this isn't in response to user action.
-            _log.Error(ex, $"PinDefaultWidget failed: ");
-        }
     }
 
     [RelayCommand]
@@ -1011,33 +901,4 @@ public partial class DashboardView : ToolPage, IDisposable
             _disposedValue = true;
         }
     }
-
-#if DEBUG
-    private void AddResetButton(object sender, RoutedEventArgs e)
-    {
-        var resetButton = new Button
-        {
-            Content = new SymbolIcon(Symbol.Refresh),
-            HorizontalAlignment = HorizontalAlignment.Right,
-            FontSize = 4,
-        };
-        resetButton.Click += ResetButton_Click;
-        AutomationProperties.SetName(resetButton, "ResetBannerButton");
-        var parent = AddWidgetButton.Parent as StackPanel;
-        var index = parent.Children.IndexOf(AddWidgetButton);
-        parent.Children.Insert(index + 1, resetButton);
-    }
-
-#pragma warning disable CA1853
-    private void ResetButton_Click(object sender, RoutedEventArgs e)
-    {
-        var roamingProperties = Windows.Storage.ApplicationData.Current.RoamingSettings.Values;
-        if (roamingProperties.ContainsKey("HideDashboardBanner"))
-        {
-            roamingProperties.Remove("HideDashboardBanner");
-        }
-
-        BannerViewModel.ResetDashboardBanner();
-    }
-#endif
 }

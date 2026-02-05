@@ -18,16 +18,6 @@
     <Page.Resources>
         <ResourceDictionary>
             <converters:DoubleToVisibilityConverter x:Key="CountToVisibilityConverter" GreaterThan="0" FalseValue="Visible" TrueValue="Collapsed" />
-            <ResourceDictionary.ThemeDictionaries>
-                <ResourceDictionary x:Key="Light">
-                    <x:String x:Key="DashboardBannerFront">ms-appx:///DevHome.Dashboard/Assets/DashboardBannerFrontLight.png</x:String>
-                    <x:String x:Key="DashboardBannerBack">ms-appx:///DevHome.Common/Assets/BannerBackgroundLight.png</x:String>
-                </ResourceDictionary>
-                <ResourceDictionary x:Key="Dark">
-                    <x:String x:Key="DashboardBannerFront">ms-appx:///DevHome.Dashboard/Assets/DashboardBannerFrontDark.png</x:String>
-                    <x:String x:Key="DashboardBannerBack">ms-appx:///DevHome.Common/Assets/BannerBackgroundDark.png</x:String>
-                </ResourceDictionary>
-            </ResourceDictionary.ThemeDictionaries>
         </ResourceDictionary>
     </Page.Resources>
 
@@ -65,17 +55,6 @@
             <!-- This Grid helps keep the content centered -->
             <Grid>
                 <StackPanel MaxWidth="{ThemeResource MaxPageContentWidth}" Margin="{ThemeResource ContentPageMargin}">
-                    <!-- Top Banner - Default/First run experience - shown until user dismissed -->
-                    <commonviews:Banner x:Name="DashboardBanner"
-                                        TextWidth="450"
-                                        Visibility="{x:Bind BannerViewModel.ShowDashboardBanner,Mode=OneWay}"
-                                        HideButtonVisibility="true"
-                                        HideButtonCommand="{x:Bind BannerViewModel.HideDashboardBannerButtonCommand,Mode=OneWay}"
-                                        ButtonCommand="{x:Bind BannerViewModel.DashboardBannerButtonCommand,Mode=OneWay}"
-                                        x:Uid="ms-resource:///DevHome.Dashboard/Resources/DashboardBanner"
-                                        BackgroundSource="{ThemeResource DashboardBannerBack}"
-                                        OverlaySource="{ThemeResource DashboardBannerFront}"
-                                        Margin="0,0,0,10" />
 
                     <!-- Widget grid -->
                     <GridView x:Name="WidgetGridView"
