@@ -1,9 +1,11 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.UI.Xaml.Media.Imaging;
 using System;
+using System.Buffers.Text;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -152,10 +154,28 @@ namespace FullScreenExperienceShell
                 appList.Remove(item);
                 if (item.Children.Count > 0)
                 {
-                    appList.Insert(i, item.Children.First());
+                    var onlyChild = item.Children.First();
+                    onlyChild.Suite = "";
+                    appList.Insert(i, onlyChild);
                 }
             }
         }
+
+        internal static void AppListSort(ObservableCollection<AppItemViewModel> appList)
+        {
+            foreach(var item in appList.Where(p => p.Type == AppItemType.Container))
+            {
+                AppListSort(item.Children);
+            }
+            
+            var sorted = appList.OrderBy(p => p.Name).ToList();
+            sorted.ForEach(p =>
+            {
+                appList.Remove(p);
+                appList.Insert(sorted.IndexOf(p), p);
+            });
+        }
+
 
         internal static (int width, int height, byte[] bytes) GetImage(IShellItem2 shellItem2)
         {
@@ -325,6 +345,7 @@ namespace FullScreenExperienceShell
                 }
             }
             AppListFlatten(observableList);
+            AppListSort(observableList);
         }
     }
 }

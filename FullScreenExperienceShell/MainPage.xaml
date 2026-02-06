@@ -3,6 +3,7 @@
     x:Class="FullScreenExperienceShell.MainPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:muxdata="using:Microsoft.UI.Xaml.Data"
     xmlns:local="using:FullScreenExperienceShell"
     xmlns:dashboard="using:DevHome.Dashboard.Views"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -12,34 +13,37 @@
 
     <Page.Resources>
         <local:BooleanValueConverter x:Name="ContainerIconValueConverter" TrueValue="📂" FalseValue="📁"/>
+        <local:SuiteItemMarginConverter x:Name="SuiteItemMarginConverter"/>
 
         <DataTemplate x:Name="ApplicationTemplate" x:DataType="local:AppItemViewModel">
-            <TreeViewItem>
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="36"/>
-                        <ColumnDefinition/>
-                    </Grid.ColumnDefinitions>
-                    <ImageIcon Grid.Column="0" Source="{x:Bind Icon, Mode=OneWay}" Width="24" Height="24"></ImageIcon>
-                    <TextBlock Grid.Column="1" Text="{x:Bind Name, Mode=OneWay}" Style="{StaticResource BodyTextBlockStyle}" VerticalAlignment="Center" Padding="8"></TextBlock>
-                </Grid>
-            </TreeViewItem>
+            <Grid Margin="{x:Bind Suite, Converter={StaticResource SuiteItemMarginConverter}}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="36"/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <ImageIcon Grid.Column="0" Source="{x:Bind Icon, Mode=OneWay}" Width="24" Height="24"></ImageIcon>
+                <TextBlock Grid.Column="1" Text="{x:Bind Name, Mode=OneWay}" Style="{StaticResource BodyTextBlockStyle}" VerticalAlignment="Center" Padding="8"></TextBlock>
+            </Grid>
         </DataTemplate>
         <DataTemplate x:Name="ContainerTemplate" x:DataType="local:AppItemViewModel">
-            <TreeViewItem ItemsSource="{x:Bind Children}" ExpandedGlyph="" CollapsedGlyph="" IsExpanded="{x:Bind Expanded, Mode=OneWay}">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="36"/>
-                        <ColumnDefinition/>
-                    </Grid.ColumnDefinitions>
-                    <FontIcon Grid.Column="0" FontFamily="Segoe UI Emoji" Glyph="{x:Bind Expanded, Converter={StaticResource ContainerIconValueConverter}, Mode=OneWay}" FontSize="24"></FontIcon>
-                    <TextBlock Grid.Column="1" Text="{x:Bind Name, Mode=OneWay}" Style="{StaticResource BodyTextBlockStyle}" VerticalAlignment="Center" Padding="8"></TextBlock>
-                </Grid>
-            </TreeViewItem>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="36"/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <FontIcon Grid.Column="0" FontFamily="Segoe UI Emoji" Glyph="{x:Bind Expanded, Converter={StaticResource ContainerIconValueConverter}, Mode=OneWay}" FontSize="24"></FontIcon>
+                <TextBlock Grid.Column="1" Text="{x:Bind Name, Mode=OneWay}" Style="{StaticResource BodyTextBlockStyle}" VerticalAlignment="Center" Padding="8"></TextBlock>
+            </Grid>
         </DataTemplate>
         <local:AppItemTemplateSelector x:Name="AppItemTemplateSelector"
                                        ApplicationTemplate="{StaticResource ApplicationTemplate}"
                                        ContainerTemplate="{StaticResource ContainerTemplate}"/>
+
+        <CollectionViewSource
+            x:Name="cvsGroups"
+            IsSourceGrouped="True"
+            ItemsPath="GroupItems"
+            Source="{x:Bind ViewModel.Groups, Mode=OneWay}" />
     </Page.Resources>
 
     <Grid Padding="8">
@@ -54,8 +58,40 @@
         <StackPanel Grid.Row="0" Orientation="Horizontal">
             <Button x:Name="RefreshBtn" Command="{x:Bind RefreshAppListCommand}">Refresh</Button>
         </StackPanel>
-        <TreeView Grid.Row="1" CanReorderItems="False" SelectionMode="None" ItemsSource="{x:Bind ViewModel.Applications}"
-                  ItemTemplateSelector="{StaticResource AppItemTemplateSelector}" ItemInvoked="TreeView_ItemInvoked"/>
+
+        <SemanticZoom Grid.Row="1">
+            <SemanticZoom.ZoomedOutView>
+                <GridView ItemsSource="{x:Bind cvsGroups.View.CollectionGroups, Mode=OneWay}"
+                          SelectionMode="None" VerticalAlignment="Center" MaxWidth="300">
+                    <GridView.ItemTemplate>
+                        <DataTemplate x:DataType="muxdata:ICollectionViewGroup">
+                            <TextBlock Text="{x:Bind ((local:AppItemGroup)Group).GroupKey}"></TextBlock>
+                        </DataTemplate>
+                    </GridView.ItemTemplate>
+                </GridView>
+            </SemanticZoom.ZoomedOutView>
+            <SemanticZoom.ZoomedInView>
+                <ListView ItemsSource="{x:Bind cvsGroups.View, Mode=OneWay}"
+                      ItemTemplateSelector="{StaticResource AppItemTemplateSelector}"
+                      SelectionMode="None"
+                      ItemClick="ListView_ItemClick"
+                      IsItemClickEnabled="True"
+                      ScrollViewer.IsHorizontalScrollChainingEnabled="False">
+                    <ListView.GroupStyle>
+                        <GroupStyle>
+                            <GroupStyle.HeaderTemplate>
+                                <DataTemplate x:DataType="local:AppItemGroup">
+                                    <TextBlock Style="{StaticResource SubtitleTextBlockStyle}" Text="{x:Bind GroupKey, Mode=OneWay}"/>
+                                </DataTemplate>
+                            </GroupStyle.HeaderTemplate>
+                        </GroupStyle>
+                    </ListView.GroupStyle>
+                </ListView>
+                <!--<TreeView Grid.Row="1" CanReorderItems="False" SelectionMode="None" ItemsSource="{x:Bind ViewModel.Applications, Mode=OneWay}"
+                    ItemTemplateSelector="{StaticResource AppItemTemplateSelector}" ItemInvoked="TreeView_ItemInvoked"/>-->
+            </SemanticZoom.ZoomedInView>
+        </SemanticZoom>
+        
         <ProgressRing Grid.Row="1" Visibility="{x:Bind RefreshAppListCommand.IsRunning, Mode=OneWay}" Width="48" Height="48"></ProgressRing>
 
         <dashboard:DashboardView Grid.Column="1" Grid.Row="0" Grid.RowSpan="2"></dashboard:DashboardView>
