@@ -25,7 +25,7 @@ jobs:
         run: |
           $cert = New-SelfSignedCertificate -Type Custom -Subject "CN=FullScreenExperienceShell" -KeyUsage DigitalSignature -FriendlyName "FullScreenExperienceShell" -CertStoreLocation "Cert:\CurrentUser\My" -TextExtension @("2.5.29.37={text}1.3.6.1.5.5.7.3.3", "2.5.29.19={text}")
           $password = ConvertTo-SecureString -String "password" -Force -AsPlainText
-          Export-PfxCertificate -Cert $cert -FilePath "GitHubActionsWorkflow.pfx" -Password $password
+          Export-PfxCertificate -Cert $cert -FilePath "${{ github.workspace }}\GitHubActionsWorkflow.pfx" -Password $password
         shell: powershell
 
       - name: Build and Package
@@ -35,13 +35,13 @@ jobs:
             -r win-x64 `
             --self-contained true `
             /p:AppxPackageSigningEnabled=true `
-            /p:PackageCertificateKeyFile="GitHubActionsWorkflow.pfx" `
+            /p:PackageCertificateKeyFile="${{ github.workspace }}\GitHubActionsWorkflow.pfx" `
             /p:PackageCertificatePassword="password" `
-            /p:AppxPackageDir="AppxPackages" `
+            /p:AppxPackageDir="${{ github.workspace }}\AppxPackages" `
             /p:GenerateAppxPackageOnBuild=true
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: MSIX-Package
-          path: FullScreenExperienceShell/AppxPackages/**/*.msix*
+          path: AppxPackages/**/*.msix*
