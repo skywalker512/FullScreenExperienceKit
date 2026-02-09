@@ -53,7 +53,7 @@ jobs:
             --self-contained true `
             /p:AppxPackageSigningEnabled=true `
             /p:PackageCertificateThumbprint="$thumbprint" `
-            /p:AppxPackageDir="${{ github.workspace }}\AppxPackages" `
+            /p:AppxPackageDir="${{ github.workspace }}\AppxPackages\" `
             /p:GenerateAppxPackageOnBuild=true
         shell: powershell
 
@@ -61,7 +61,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: MSIX-Package
-          path: AppxPackages/**/*.msix*
+          path: |
+            AppxPackages/**/*.msix
+            AppxPackages/**/*.msixbundle
 
       - name: Cleanup Certificate
         if: always()
