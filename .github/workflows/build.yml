@@ -41,15 +41,21 @@ jobs:
 
       - name: Build and Package
         run: |
+          # 获取证书指纹
+          $cert = Get-ChildItem -Path "Cert:\CurrentUser\My" | Where-Object { $_.Subject -eq "CN=FullScreenExperienceShell" } | Select-Object -First 1
+          $thumbprint = $cert.Thumbprint
+          Write-Host "Using certificate thumbprint: $thumbprint"
+
+          # 使用证书指纹进行签名
           dotnet publish FullScreenExperienceShell/FullScreenExperienceShell.csproj `
             -c Release `
             -r win-x64 `
             --self-contained true `
             /p:AppxPackageSigningEnabled=true `
-            /p:PackageCertificateKeyFile="${{ github.workspace }}\GitHubActionsWorkflow.pfx" `
-            /p:PackageCertificatePassword="password" `
+            /p:PackageCertificateThumbprint="$thumbprint" `
             /p:AppxPackageDir="${{ github.workspace }}\AppxPackages" `
             /p:GenerateAppxPackageOnBuild=true
+        shell: powershell
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
