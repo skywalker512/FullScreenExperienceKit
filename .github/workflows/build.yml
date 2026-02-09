@@ -21,11 +21,22 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore FullScreenExperienceShell/FullScreenExperienceShell.csproj
 
-      - name: Create Temporary Certificate
+      - name: Create and Import Certificate
         run: |
+          # 创建自签名证书
           $cert = New-SelfSignedCertificate -Type Custom -Subject "CN=FullScreenExperienceShell" -KeyUsage DigitalSignature -FriendlyName "FullScreenExperienceShell" -CertStoreLocation "Cert:\CurrentUser\My" -TextExtension @("2.5.29.37={text}1.3.6.1.5.5.7.3.3", "2.5.29.19={text}")
+
+          # 导出证书
           $password = ConvertTo-SecureString -String "password" -Force -AsPlainText
-          Export-PfxCertificate -Cert $cert -FilePath "${{ github.workspace }}\GitHubActionsWorkflow.pfx" -Password $password
+          $pfxPath = "${{ github.workspace }}\GitHubActionsWorkflow.pfx"
+          Export-PfxCertificate -Cert $cert -FilePath $pfxPath -Password $password
+
+          # 导入证书到受信任的根证书存储区
+          Import-PfxCertificate -FilePath $pfxPath -CertStoreLocation "Cert:\LocalMachine\Root" -Password $password
+          Import-PfxCertificate -FilePath $pfxPath -CertStoreLocation "Cert:\CurrentUser\Root" -Password $password
+
+          Write-Host "Certificate created and imported successfully"
+          Write-Host "Certificate Thumbprint: $($cert.Thumbprint)"
         shell: powershell
 
       - name: Build and Package
@@ -45,3 +56,13 @@ jobs:
         with:
           name: MSIX-Package
           path: AppxPackages/**/*.msix*
+
+      - name: Cleanup Certificate
+        if: always()
+        run: |
+          # 清理临时证书文件
+          if (Test-Path "${{ github.workspace }}\GitHubActionsWorkflow.pfx") {
+            Remove-Item "${{ github.workspace }}\GitHubActionsWorkflow.pfx" -Force
+            Write-Host "Certificate file removed"
+          }
+        shell: powershell
